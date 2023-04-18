@@ -1,0 +1,29 @@
+defineVariable(float, LOYALTY_FACTOR);
+defineVariable(float, EDITOR_EFFICIENCY);
+defineVariable(float, NEWSPAPER_STRENGTH);
+defineVariable(float, SPO_EFFICIENCY);
+defineVariable(float, SHOW_STRENGTH);
+defineVariable(float, LOYALTY_MAX_NEWSPAPER);
+defineVariable(float, LOYALTY_MAX_SHOW);
+defineVariable(char, DISABLE_OBJECTIVES);
+
+defineFunction(InitSettings, void)
+{
+	//you can modify the following values to enable or disable features or change the balance, making the game harder or easier
+	//please keep at least one digit after the decimal point if present
+	
+	LOYALTY_FACTOR = 0.5; //how much of the newspaper content is devoted to propaganda, you can increase it for a bigger effect on loyalty, but if over 0.75, it will decrease the cultural enjoyment of your citizens instead of increasing it
+	
+	EDITOR_EFFICIENCY = 300.0; //how many citizens can a single editor serve
+	NEWSPAPER_STRENGTH = 0.005; //increase in loyalty (or culture) every time a citizen reads a newspaper (at 100% effectiveness, 100% of newspaper's content and 100% average loyalty of editors) (set to 0.0 or less to disable the feature)
+	
+	SPO_EFFICIENCY = 5.0; //how many workers in cinemas can one secret police officer (SPO) oversee
+	SHOW_STRENGTH = 0.01; //loyalty change if a citizen is watching a show at a cinema (set to 0.0 or less to disable the feature)
+	
+	LOYALTY_MAX_NEWSPAPER = 0.45; //newspaper will not increase loyalty above this level
+	LOYALTY_MAX_SHOW = 0.5; //cinemas will not increase loyalty above this level
+	
+	DISABLE_OBJECTIVES = 0; //disables objectives visualising the number of current and required editors and secret police agents
+	
+	returnVoid();
+}

@@ -1,0 +1,48 @@
+defineVariable(float, max);
+defineVariable(float, min);
+
+defineFunction(Clamp, float, float:x, float:y, float:z)
+{
+    if (x < y)
+	{
+        x = y;
+    }
+	elseif(x > z) {
+		x = z;
+	}
+	return(x);
+}
+
+defineFunction(ModuleFloat, float, float:c)
+{
+    if (c < 0) {
+        c = -c;
+    }
+	return(c);
+}
+
+defineFunction(MaxFloat, float, float:a, float:b)
+{
+    if (a < b)
+	{
+        max = b;
+    }
+	else()
+	{
+		max = a;
+	}
+	return(max);
+}
+
+defineFunction(MinFloat, float, float:e, float:f)
+{
+    if (e < f)
+	{
+        min = e;
+    }
+	else()
+	{
+		min = f;
+	}
+	return(min);
+}

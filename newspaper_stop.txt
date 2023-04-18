@@ -1,0 +1,13 @@
+include("include/SOVIETInstructions.txt");
+defineVariable(char, script);
+
+defineFunction(main, void)
+{
+	Script_Exists("newspaper.txt", script);
+	if(script ? 1)
+	{
+		Script_DestroyByName("newspaper.txt");
+	}
+	Objectives_ClearAll();
+	end();
+}
