@@ -42,14 +42,16 @@ defineFunction(UpdateState, void)
 	editors_total_loyalty = 0.0;
 	cinemas_workers = 0;
 	spo = 0;
+	active_radio = 0;
+	active_tv = 0;
 	for (i=0, i<n, i=i+1)
 	{
 		building.GetDataByIndex(i);
-		if(building.nType ? BUILDINGTYPE_BROADCAST & building.nSubType ? BUILDINGSUBTYPE_RADIO & building.nWorkersNum > 0)
+		if(building.nType ? BUILDINGTYPE_BROADCAST & building.nSubType ? BUILDINGSUBTYPE_RADIO & building.nWorkersNum > 0 & building.fPercFinished ? 1.0)
 		{
 			active_radio = 1;
 		}
-		if(building.nType ? BUILDINGTYPE_BROADCAST & building.nSubType ? BUILDINGSUBTYPE_TELEVISION & building.nWorkersNum > 0)
+		if(building.nType ? BUILDINGTYPE_BROADCAST & building.nSubType ? BUILDINGSUBTYPE_TELEVISION & building.nWorkersNum > 0 & building.fPercFinished ? 1.0)
 		{
 			active_tv = 1;
 		}
@@ -91,8 +93,8 @@ defineFunction(CalculateEfficiency, void)
 	editors_avg_loyalty = 0.0;
 	newspaper_efficiency = 0.0;
 	negative_newspaper_efficiency = 0.0;
-	spo_avg_loyalty = 0.0;
 	censorship_efficiency = 0.0;
+	spo_avg_loyalty = 0.0;
 	if(editors > 0)
 	{
 		editors_avg_loyalty = editors_total_loyalty / editors;
@@ -102,7 +104,11 @@ defineFunction(CalculateEfficiency, void)
 	if(spo > 0)
 	{
 		spo_avg_loyalty = spo_total_loyalty / spo;
-		censorship_efficiency = MaxFloat(spo * SPO_EFFICIENCY / cinemas_workers, 1.0) * spo_avg_loyalty * SHOW_STRENGTH;
+		censorship_efficiency = 1.0;
+		if(cinemas_workers > 0)
+		{
+			censorship_efficiency = MaxFloat(spo * SPO_EFFICIENCY / cinemas_workers, 1.0);
+		}
 	}
 	if(DISABLE_OBJECTIVES ? 0 & (NEWSPAPER_STRENGTH > 0.0 | SHOW_STRENGTH > 0.0))
 	{
@@ -121,8 +127,8 @@ defineFunction(CalculateEfficiency, void)
 
 defineFunction(ReadNewspaper, void, int:id)
 {
-	worker.GetDataByIndex(worker_id);
-	can_read = worker.bIsHome + worker.fEducation - 1.0;
+	worker.GetDataByIndex(id);
+ 	can_read = worker.bIsHome + worker.fEducation - 1.0;
 	individual_effectiveness = 1.0;
 	if(worker.fStatusElectronic > 2.0 & active_tv ? 1)
 	{
@@ -189,10 +195,11 @@ defineFunction(main, void)
 	{
 		UpdateState();
 		CalculateEfficiency();
-		for (i=0, i<n, i=i+1)
+		Script_EnterCriticalSection();
+ 		for (i=0, i<n, i=i+1)
 		{
 			building.GetDataByIndex(i);
-			if(building.nType ? BUILDINGTYPE_LIVING)
+ 			if(building.nType ? BUILDINGTYPE_LIVING)
 			{
 				for (j=0, j<building.nWorkersNum, j=j+1)
 				{
@@ -220,6 +227,7 @@ defineFunction(main, void)
 				}
 			}
 		}
+		Script_LeaveCriticalSection();
 		Script_Sleep(9.5);
 	}
 	end();
