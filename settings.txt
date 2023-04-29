@@ -3,8 +3,16 @@ defineVariable(float, EDITOR_EFFICIENCY);
 defineVariable(float, NEWSPAPER_STRENGTH);
 defineVariable(float, SPO_EFFICIENCY);
 defineVariable(float, SHOW_STRENGTH);
+defineVariable(float, SCHOOL_STRENGTH);
+defineVariable(float, UNIVERSITY_STRENGTH);
+defineVariable(float, ORPHANAGE_STRENGTH);
+defineVariable(float, PRISON_STRENGTH);
 defineVariable(float, LOYALTY_MAX_NEWSPAPER);
 defineVariable(float, LOYALTY_MAX_SHOW);
+defineVariable(float, LOYALTY_MAX_SCHOOL);
+defineVariable(float, LOYALTY_MAX_UNIVERSITY);
+defineVariable(float, LOYALTY_MAX_ORPHANAGE);
+defineVariable(float, LOYALTY_MAX_PRISON);
 defineVariable(char, DISABLE_OBJECTIVES);
 
 defineFunction(InitSettings, void)
@@ -14,14 +22,22 @@ defineFunction(InitSettings, void)
 	
 	LOYALTY_FACTOR = 0.5; //how much of the newspaper content is devoted to propaganda, you can increase it for a bigger effect on loyalty, but if over 0.75, it will decrease the cultural enjoyment of your citizens instead of increasing it
 	
-	EDITOR_EFFICIENCY = 300.0; //how many citizens can a single editor serve
-	NEWSPAPER_STRENGTH = 0.005; //increase in loyalty (or culture) every time a citizen reads a newspaper (at 100% effectiveness, 100% of newspaper's content and 100% average loyalty of editors) (set to 0.0 or less to disable the feature)
-	
+	EDITOR_EFFICIENCY = 400.0; //how many citizens can a single editor serve
 	SPO_EFFICIENCY = 5.0; //how many workers in cinemas can one secret police officer (SPO) oversee
+	
+	NEWSPAPER_STRENGTH = 0.005; //increase in loyalty (or culture) every time a citizen reads a newspaper (at 100% effectiveness, 100% of newspaper's content and 100% average loyalty of editors) (set to 0.0 or less to disable the feature)
 	SHOW_STRENGTH = 0.01; //loyalty change if a citizen is watching a show at a cinema (set to 0.0 or less to disable the feature)
+	SCHOOL_STRENGTH = 0.001; //additional loyalty change if a child is at school (set to 0.0 or less to disable the feature)
+	UNIVERSITY_STRENGTH = 0.001; //additional loyalty change if a student is at university (set to 0.0 or less to disable the feature)
+	ORPHANAGE_STRENGTH = 0.001; //additional loyalty change if a child is at orphanage (set to 0.0 or less to disable the feature)
+	PRISON_STRENGTH = 0.0; //additional loyalty change if a citizen is at prison (set to 0.0 or less to disable the feature)
 	
 	LOYALTY_MAX_NEWSPAPER = 0.45; //newspaper will not increase loyalty above this level
 	LOYALTY_MAX_SHOW = 0.5; //cinemas will not increase loyalty above this level
+	LOYALTY_MAX_SCHOOL = 0.5; //no additional positive drift above this level
+	LOYALTY_MAX_UNIVERSITY = 0.5; //no additional positive drift above this level
+	LOYALTY_MAX_ORPHANAGE = 0.5; //no additional positive drift above this level
+	LOYALTY_MAX_PRISON = 0.5; //no additional positive drift above this level
 	
 	DISABLE_OBJECTIVES = 0; //disables objectives visualising the number of current and required editors and secret police agents
 	

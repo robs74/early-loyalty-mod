@@ -29,9 +29,9 @@ defineVariable(float, spo_avg_loyalty);
 defineVariable(float, censorship_efficiency);
 
 defineVariable(int, cinemas_workers);
-defineVariable(int, cinema_workers);
-defineVariable(float, cinema_total_loyalty);
-defineVariable(float, cinema_avg_loyalty);
+defineVariable(int, building_workers);
+defineVariable(float, building_total_loyalty);
+defineVariable(float, building_avg_loyalty);
 defineVariable(float, target_loyalty);
 
 defineFunction(UpdateState, void)
@@ -159,20 +159,42 @@ defineFunction(ReadNewspaper, void, int:id)
 	returnVoid();
 }
 
-defineFunction(WatchShow, void, int:id2)
+defineFunction(Propagandise, void, int:id2, float: drift, float:max_loyalty, float: censorship, float:ed)
 {
-	worker.GetDataByIndex(worker_id);
-	target_loyalty = censorship_efficiency * spo_avg_loyalty + (1.0 - censorship_efficiency) * cinema_avg_loyalty;
-	target_loyalty = MaxFloat(target_loyalty, cinema_avg_loyalty);
-	if(worker.fStatusSoviet < MinFloat(LOYALTY_MAX_NEWSPAPER, target_loyalty))
+	building.GetDataByIndex(id2);
+	building_total_loyalty = 0.0;
+	building_workers = 0;
+	building_avg_loyalty = 0.0;
+	for(j=0, j < building.nWorkersNum, j=j+1)
 	{
-		//increase loyalty
-		Person_SetStatus(id2, 3, Clamp(worker.fStatusSoviet + SHOW_STRENGTH, 0.0, 1.0));
+		Building_Workers_GetID(id2, j, worker_id);
+		worker.GetDataByIndex(worker_id);
+		if(worker.fEducation > ed)
+		{
+			building_workers = building_workers + 1;
+			building_total_loyalty = building_total_loyalty + worker.fStatusSoviet;
+		}
 	}
-	elseif(worker.fStatusSoviet > target_loyalty)
+	if(building_workers > 0)
 	{
-		//decrease loyalty
-		Person_SetStatus(id2, 3, Clamp(worker.fStatusSoviet - SHOW_STRENGTH, 0.0, 1.0));
+		building_avg_loyalty = building_total_loyalty / building_workers;
+	}
+	target_loyalty = censorship_efficiency * censorship * spo_avg_loyalty + (1.0 - censorship_efficiency * censorship) * building_avg_loyalty;
+	target_loyalty = MaxFloat(target_loyalty, building_avg_loyalty);
+	for (j=0, j<building.nWorkersSecondaryNum, j=j+1)
+	{
+		Building_WorkersSecondary_GetID(id2, j, worker_id);
+		worker.GetDataByIndex(worker_id);
+		if(worker.fStatusSoviet < MinFloat(max_loyalty, target_loyalty))
+		{
+			//increase loyalty
+			Person_SetStatus(worker_id, 3, Clamp(worker.fStatusSoviet + drift, 0.0, 1.0));
+		}
+		elseif(worker.fStatusSoviet > target_loyalty)
+		{
+			//decrease loyalty
+			Person_SetStatus(worker_id, 3, Clamp(worker.fStatusSoviet - drift, 0.0, 1.0));
+		}
 	}
 	returnVoid();
 }
@@ -186,16 +208,24 @@ defineFunction(main, void)
 	EDITOR_EFFICIENCY = MaxFloat(EDITOR_EFFICIENCY, 1.0);
 	NEWSPAPER_STRENGTH = Clamp(NEWSPAPER_STRENGTH, 0.0, 1.0);
 	SHOW_STRENGTH = Clamp(SHOW_STRENGTH, 0.0, 1.0);
+	SCHOOL_STRENGTH = Clamp(SCHOOL_STRENGTH, 0.0, 1.0);
+	UNIVERSITY_STRENGTH = Clamp(UNIVERSITY_STRENGTH, 0.0, 1.0);
+	ORPHANAGE_STRENGTH = Clamp(ORPHANAGE_STRENGTH, 0.0, 1.0);
+	PRISON_STRENGTH = Clamp(PRISON_STRENGTH, 0.0, 1.0);
 	SPO_EFFICIENCY = MaxFloat(SPO_EFFICIENCY, 1.0);
 	LOYALTY_MAX_NEWSPAPER = Clamp(LOYALTY_MAX_NEWSPAPER, 0.0, 1.0);
 	LOYALTY_MAX_SHOW = Clamp(LOYALTY_MAX_SHOW, 0.0, 1.0);
+	LOYALTY_MAX_SCHOOL = Clamp(LOYALTY_MAX_NEWSPAPER, 0.0, 1.0);
+	LOYALTY_MAX_UNIVERSITY = Clamp(LOYALTY_MAX_SHOW, 0.0, 1.0);
+	LOYALTY_MAX_ORPHANAGE = Clamp(LOYALTY_MAX_NEWSPAPER, 0.0, 1.0);
+	LOYALTY_MAX_PRISON = Clamp(LOYALTY_MAX_SHOW, 0.0, 1.0);
 	
 	culture = 0.75 - LOYALTY_FACTOR;
 	while(1 ? 1)
 	{
+		Script_EnterCriticalSection();
 		UpdateState();
 		CalculateEfficiency();
-		Script_EnterCriticalSection();
  		for (i=0, i<n, i=i+1)
 		{
 			building.GetDataByIndex(i);
@@ -209,22 +239,23 @@ defineFunction(main, void)
 			}
 			if(building.nType ? BUILDINGTYPE_KINO)
 			{
-				cinema_total_loyalty = 0.0;
-				if(building.nWorkersNum > 0)
-				{
-					for(j=0, j < building.nWorkersNum, j=j+1)
-					{
-						Building_Workers_GetID(i, j, worker_id);
-						worker.GetDataByIndex(worker_id);
-						cinema_total_loyalty = cinema_total_loyalty + worker.fStatusSoviet;
-					}
-					cinema_avg_loyalty = cinema_total_loyalty / building.nWorkersNum;
-					for (j=0, j<building.nWorkersSecondaryNum, j=j+1)
-					{
-						Building_WorkersSecondary_GetID(i, j, worker_id);
-						WatchShow(worker_id);
-					}
-				}
+				Propagandise(i, SHOW_STRENGTH, LOYALTY_MAX_SHOW, 1.0, 0.0);
+			}
+			if(building.nType ? BUILDINGTYPE_SCHOOL)
+			{
+				Propagandise(i, SCHOOL_STRENGTH, LOYALTY_MAX_SCHOOL, 0.0, 1.999);
+			}
+			if(building.nType ? BUILDINGTYPE_UNIVERSITY)
+			{
+				Propagandise(i, UNIVERSITY_STRENGTH, LOYALTY_MAX_UNIVERSITY, 0.0, 1.999);
+			}
+			if(building.nType ? BUILDINGTYPE_ORPHANAGE)
+			{
+				Propagandise(i, ORPHANAGE_STRENGTH, LOYALTY_MAX_ORPHANAGE, 0.0, 0.0);
+			}
+			if(building.nType ? BUILDINGTYPE_PRISON)
+			{
+				Propagandise(i, PRISON_STRENGTH, LOYALTY_MAX_PRISON, 0.0, 0.0);
 			}
 		}
 		Script_LeaveCriticalSection();
