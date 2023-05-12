@@ -8,6 +8,6 @@ defineFunction(main, void)
 	{
 		Script_DestroyByName("newspaper.txt");
 	}
-	Objectives_ClearAll();
+	Objective_Remove("press");
 	end();
 }

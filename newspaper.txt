@@ -112,7 +112,7 @@ defineFunction(CalculateEfficiency, void)
 	}
 	if(DISABLE_OBJECTIVES ? 0 & (NEWSPAPER_STRENGTH > 0.0 | SHOW_STRENGTH > 0.0))
 	{
-		Objectives_ClearAll();
+		Objective_Remove("press");
 		Objectives_CreateNewString("press", "Press and shows");
 		Objective_AddRequirement("press", population * 1.0 / EDITOR_EFFICIENCY + 1.0, "newspaper_icon.png");
 		Objective_UpdateRequirement("press", 0, editors * 1.0);
