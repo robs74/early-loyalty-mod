@@ -55,7 +55,7 @@ defineFunction(UpdateState, void)
 		{
 			active_tv = 1;
 		}
-		if(building.nType ? BUILDINGTYPE_KINO)
+		if(building.nType ? BUILDINGTYPE_KINO & building.fPercFinished ? 1.0)
 		{
 			cinemas_workers = cinemas_workers + building.nWorkersNum;
 		}
@@ -69,12 +69,12 @@ defineFunction(UpdateState, void)
 				spo_total_loyalty = spo_total_loyalty + worker.fStatusSoviet;
 			}
 		}
-		if(building.nType ? BUILDINGTYPE_LIVING)
+		if(building.nType ? BUILDINGTYPE_LIVING & building.fPercFinished ? 1.0)
 		{
 			population = population + building.nWorkersNum;
 		}
 		//newspaper is a secret police office without any vehicles
-		if(building.nType ? BUILDINGTYPE_SECRET_POLICE & building.nVehiclesWorkingNum < 1)
+		if(building.nType ? BUILDINGTYPE_SECRET_POLICE & building.nVehiclesWorkingNum < 1 & building.fPercFinished ? 1.0)
 		{
 			editors = editors + building.nWorkersNum;
 			for (j=0, j<building.nWorkersNum, j=j+1)
@@ -237,23 +237,23 @@ defineFunction(main, void)
 					ReadNewspaper(worker_id);
 				}
 			}
-			if(building.nType ? BUILDINGTYPE_KINO)
+			if(building.nType ? BUILDINGTYPE_KINO & building.fPercFinished ? 1.0)
 			{
 				Propagandise(i, SHOW_STRENGTH, LOYALTY_MAX_SHOW, 1.0, 0.0);
 			}
-			if(building.nType ? BUILDINGTYPE_SCHOOL)
+			if(building.nType ? BUILDINGTYPE_SCHOOL & building.fPercFinished ? 1.0)
 			{
 				Propagandise(i, SCHOOL_STRENGTH, LOYALTY_MAX_SCHOOL, 0.0, 1.999);
 			}
-			if(building.nType ? BUILDINGTYPE_UNIVERSITY)
+			if(building.nType ? BUILDINGTYPE_UNIVERSITY & building.fPercFinished ? 1.0)
 			{
 				Propagandise(i, UNIVERSITY_STRENGTH, LOYALTY_MAX_UNIVERSITY, 0.0, 1.999);
 			}
-			if(building.nType ? BUILDINGTYPE_ORPHANAGE)
+			if(building.nType ? BUILDINGTYPE_ORPHANAGE & building.fPercFinished ? 1.0)
 			{
 				Propagandise(i, ORPHANAGE_STRENGTH, LOYALTY_MAX_ORPHANAGE, 0.0, 0.0);
 			}
-			if(building.nType ? BUILDINGTYPE_PRISON)
+			if(building.nType ? BUILDINGTYPE_PRISON & building.fPercFinished ? 1.0)
 			{
 				Propagandise(i, PRISON_STRENGTH, LOYALTY_MAX_PRISON, 0.0, 0.0);
 			}
