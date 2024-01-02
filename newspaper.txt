@@ -11,6 +11,7 @@ defineVariable(int, worker_id);
 defineVariable(Person, worker);
 defineVariable(Building, building);
 defineVariable(int, population);
+defineVariable(int, is_active);
 
 defineVariable(int, editors);
 defineVariable(float, editors_total_loyalty);
@@ -33,6 +34,8 @@ defineVariable(int, building_workers);
 defineVariable(float, building_total_loyalty);
 defineVariable(float, building_avg_loyalty);
 defineVariable(float, target_loyalty);
+defineVariable(float, game_time);
+defineVariable(float, game_time_prev);
 
 defineFunction(UpdateState, void)
 {
@@ -221,45 +224,53 @@ defineFunction(main, void)
 	LOYALTY_MAX_PRISON = Clamp(LOYALTY_MAX_SHOW, 0.0, 1.0);
 	
 	culture = 0.75 - LOYALTY_FACTOR;
+	Script_GetGameTime(game_time);
+	Script_GetGameTime(game_time_prev);
 	while(1 ? 1)
 	{
-		Script_EnterCriticalSection();
-		UpdateState();
-		CalculateEfficiency();
- 		for (i=0, i<n, i=i+1)
+		Script_GetGameTime(game_time);
+		if(game_time > game_time_prev + 9.0)
 		{
-			building.GetDataByIndex(i);
- 			if(building.nType ? BUILDINGTYPE_LIVING)
+			Script_EnterCriticalSection();
+			UpdateState();
+			CalculateEfficiency();
+			for (i=0, i<n, i=i+1)
 			{
-				for (j=0, j<building.nWorkersNum, j=j+1)
+				building.GetDataByIndex(i);
+				Building_IsOldTownActive(i, is_active);
+				if(building.nType ? BUILDINGTYPE_LIVING & is_active*is_active ? 1 & building.fPercFinished > 0.9999)
 				{
-					Building_Workers_GetID(i, j, worker_id);
-					ReadNewspaper(worker_id);
+					for (j=0, j<building.nWorkersNum, j=j+1)
+					{
+						Building_Workers_GetID(i, j, worker_id);
+						ReadNewspaper(worker_id);
+					}
+				}
+				if(building.nType ? BUILDINGTYPE_KINO & building.fPercFinished > 0.9999)
+				{
+					Propagandise(i, SHOW_STRENGTH, LOYALTY_MAX_SHOW, 1.0, 0.0);
+				}
+				if(building.nType ? BUILDINGTYPE_SCHOOL & building.fPercFinished > 0.9999)
+				{
+					Propagandise(i, SCHOOL_STRENGTH, LOYALTY_MAX_SCHOOL, 0.0, 1.999);
+				}
+				if(building.nType ? BUILDINGTYPE_UNIVERSITY & building.fPercFinished > 0.9999)
+				{
+					Propagandise(i, UNIVERSITY_STRENGTH, LOYALTY_MAX_UNIVERSITY, 0.0, 1.999);
+				}
+				if(building.nType ? BUILDINGTYPE_ORPHANAGE & building.fPercFinished > 0.9999)
+				{
+					Propagandise(i, ORPHANAGE_STRENGTH, LOYALTY_MAX_ORPHANAGE, 0.0, 0.0);
+				}
+				if(building.nType ? BUILDINGTYPE_PRISON & building.fPercFinished > 0.9999)
+				{
+					Propagandise(i, PRISON_STRENGTH, LOYALTY_MAX_PRISON, 0.0, 0.0);
 				}
 			}
-			if(building.nType ? BUILDINGTYPE_KINO & building.fPercFinished > 0.9999)
-			{
-				Propagandise(i, SHOW_STRENGTH, LOYALTY_MAX_SHOW, 1.0, 0.0);
-			}
-			if(building.nType ? BUILDINGTYPE_SCHOOL & building.fPercFinished > 0.9999)
-			{
-				Propagandise(i, SCHOOL_STRENGTH, LOYALTY_MAX_SCHOOL, 0.0, 1.999);
-			}
-			if(building.nType ? BUILDINGTYPE_UNIVERSITY & building.fPercFinished > 0.9999)
-			{
-				Propagandise(i, UNIVERSITY_STRENGTH, LOYALTY_MAX_UNIVERSITY, 0.0, 1.999);
-			}
-			if(building.nType ? BUILDINGTYPE_ORPHANAGE & building.fPercFinished > 0.9999)
-			{
-				Propagandise(i, ORPHANAGE_STRENGTH, LOYALTY_MAX_ORPHANAGE, 0.0, 0.0);
-			}
-			if(building.nType ? BUILDINGTYPE_PRISON & building.fPercFinished > 0.9999)
-			{
-				Propagandise(i, PRISON_STRENGTH, LOYALTY_MAX_PRISON, 0.0, 0.0);
-			}
+			game_time_prev = game_time;
+			Script_LeaveCriticalSection();
+			Script_Sleep(9.5);
 		}
-		Script_LeaveCriticalSection();
-		Script_Sleep(9.5);
 	}
 	end();
 }
