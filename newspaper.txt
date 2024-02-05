@@ -36,6 +36,16 @@ defineVariable(float, building_avg_loyalty);
 defineVariable(float, target_loyalty);
 defineVariable(float, game_time);
 defineVariable(float, game_time_prev);
+defineVariable(int, window_id);
+defineVariable(int, window_exists);
+defineVariable(Window, window);
+defineVariable(int, clicked_object_id);
+defineArray(char[200], text);
+defineVariable(char, NEWLINE);
+defineVariable(float, newspaper_efficiency_perc);
+defineVariable(float, censorship_efficiency_perc);
+defineVariable(int, editors_required);
+defineVariable(int, spo_required);
 
 defineFunction(UpdateState, void)
 {
@@ -95,22 +105,80 @@ defineFunction(CalculateEfficiency, void)
 {
 	editors_avg_loyalty = 0.0;
 	newspaper_efficiency = 0.0;
+	newspaper_efficiency_perc = 0.0;
 	negative_newspaper_efficiency = 0.0;
 	censorship_efficiency = 0.0;
+	censorship_efficiency_perc = 0.0;
 	spo_avg_loyalty = 0.0;
+	editors_required = population * 1.0 / EDITOR_EFFICIENCY + 1.0;
+	spo_required = cinemas_workers * 1.0 / SPO_EFFICIENCY + 1.0;
 	if(editors > 0)
 	{
 		editors_avg_loyalty = editors_total_loyalty / editors;
-		newspaper_efficiency = MaxFloat(editors * EDITOR_EFFICIENCY / population, 1.0) * NEWSPAPER_STRENGTH;
+		newspaper_efficiency_perc = MinFloat(editors * EDITOR_EFFICIENCY / population * 100.0, 100.0);
+		newspaper_efficiency = MinFloat(editors * EDITOR_EFFICIENCY / population, 1.0) * NEWSPAPER_STRENGTH;
 		negative_newspaper_efficiency = (2.0 - MaxFloat(editors * EDITOR_EFFICIENCY / population, 1.0)) * editors_avg_loyalty * NEWSPAPER_STRENGTH;
 	}
 	if(spo > 0)
 	{
 		spo_avg_loyalty = spo_total_loyalty / spo;
 		censorship_efficiency = 1.0;
+		censorship_efficiency_perc = 100.0;
 		if(cinemas_workers > 0)
 		{
-			censorship_efficiency = MaxFloat(spo * SPO_EFFICIENCY / cinemas_workers, 1.0);
+			censorship_efficiency_perc = MinFloat(editors * EDITOR_EFFICIENCY / population * 100.0, 100.0);
+			censorship_efficiency = MinFloat(spo * SPO_EFFICIENCY / cinemas_workers, 1.0);
+		}
+	}
+	Window_GetLastWindow(window_id);
+	if(window_id ? -1)
+	{
+		clicked_object_id = -1;
+	}
+	else()
+	{
+		window.GetDataByIndex(window_id);
+		if (window.nValidRead)
+		{
+			if (window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING & !(clicked_object_id ? window.nRefObjectIndex))
+			{
+				clicked_object_id = window.nRefObjectIndex;
+				if(window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING)
+				{
+					building.GetDataByIndex(clicked_object_id);
+					Scenario_WindowExists(window_exists);
+					if(building.nType ? BUILDINGTYPE_SECRET_POLICE & building.nVehiclesWorkingNum < 1 & building.fPercFinished > 0.9999 & !window_exists)
+					{
+						strcpy(text, "");
+						
+						strcat(text, "Newspaper editors: ");
+						strcat(text, editors);
+						strcat(text, NEWLINE);
+						
+						strcat(text, "Editors required: ");
+						strcat(text, editors_required);
+						strcat(text, NEWLINE); 
+						
+						strcat(text, "Newspaper efficiency (percent): ");
+						strcat(text, newspaper_efficiency_perc);
+						strcat(text, NEWLINE); 
+						
+						strcat(text, "Secret police officers: ");
+						strcat(text, spo);
+						strcat(text, NEWLINE);
+						
+						strcat(text, "Secret police officers required: ");
+						strcat(text, spo_required);
+						strcat(text, NEWLINE);
+						
+						strcat(text, "Censorship efficiency (percent): ");
+						strcat(text, censorship_efficiency);
+						strcat(text, "%");
+						
+						Scenario_WindowWithImageLeft("Press and shows", text, "newspaper_icon.png", 2);
+					}
+				}
+			}
 		}
 	}
 	if(DISABLE_OBJECTIVES ? 0 & (NEWSPAPER_STRENGTH > 0.0 | SHOW_STRENGTH > 0.0))
@@ -146,12 +214,12 @@ defineFunction(ReadNewspaper, void, int:id)
 		if(worker.fStatusSoviet < LOYALTY_MAX_NEWSPAPER)
 		{
 			//increase loyalty
-			Person_SetStatus(id, 3, Clamp(worker.fStatusSoviet + newspaper_efficiency * editors_avg_loyalty * individual_effectiveness * LOYALTY_FACTOR / 6.0, 0.0, LOYALTY_MAX_NEWSPAPER));
+			Person_SetStatus(id, 3, Clamp(worker.fStatusSoviet + newspaper_efficiency * editors_avg_loyalty * individual_effectiveness * LOYALTY_FACTOR / 24.0, 0.0, LOYALTY_MAX_NEWSPAPER)); //24 - approximate number of ticks per day
 		}
 		if(culture > 0.0 & worker.fStatusCulture < LOYALTY_MAX_NEWSPAPER + culture)
 		{
 			//increase culture, the more the more efficient is your newspaper
-			Person_SetStatus(id, 5, Clamp(worker.fStatusCulture + newspaper_efficiency * individual_effectiveness * culture / 30.0, 0.0, LOYALTY_MAX_NEWSPAPER + culture));
+			Person_SetStatus(id, 5, Clamp(worker.fStatusCulture + newspaper_efficiency * individual_effectiveness * culture / 120.0, 0.0, LOYALTY_MAX_NEWSPAPER + culture)); //24 * 5 - scaling factor
 		}
 		elseif(culture < 0.0)
 		{
@@ -191,12 +259,12 @@ defineFunction(Propagandise, void, int:id2, float: drift, float:max_loyalty, flo
 		if(worker.fStatusSoviet < MinFloat(max_loyalty, target_loyalty))
 		{
 			//increase loyalty
-			Person_SetStatus(worker_id, 3, Clamp(worker.fStatusSoviet + drift, 0.0, 1.0));
+			Person_SetStatus(worker_id, 3, Clamp(worker.fStatusSoviet + drift / 4.0, 0.0, 1.0)); // 4.0 - because of the increased frequency of ticks
 		}
 		elseif(worker.fStatusSoviet > target_loyalty)
 		{
 			//decrease loyalty
-			Person_SetStatus(worker_id, 3, Clamp(worker.fStatusSoviet - drift, 0.0, 1.0));
+			Person_SetStatus(worker_id, 3, Clamp(worker.fStatusSoviet - drift / 4.0, 0.0, 1.0));
 		}
 	}
 	returnVoid();
@@ -206,6 +274,7 @@ defineFunction(main, void)
 {
 	InitConstants();
 	InitSettings();
+    NEWLINE = 10; // ASCII LF
 	//check correctness of the constants in the settings file
 	LOYALTY_FACTOR = Clamp(LOYALTY_FACTOR, 0.0, 1.0);
 	EDITOR_EFFICIENCY = MaxFloat(EDITOR_EFFICIENCY, 1.0);
@@ -229,7 +298,7 @@ defineFunction(main, void)
 	while(1 ? 1)
 	{
 		Script_GetGameTime(game_time);
-		if(game_time > game_time_prev + 9.0)
+		if(game_time > game_time_prev + 2.0)
 		{
 			Script_EnterCriticalSection();
 			UpdateState();
@@ -269,7 +338,7 @@ defineFunction(main, void)
 			}
 			game_time_prev = game_time;
 			Script_LeaveCriticalSection();
-			Script_Sleep(9.5);
+			Script_Sleep(2.5);
 		}
 	}
 	end();

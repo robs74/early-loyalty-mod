@@ -25,8 +25,8 @@ defineFunction(InitSettings, void)
 	EDITOR_EFFICIENCY = 400.0; //how many citizens can a single editor serve
 	SPO_EFFICIENCY = 5.0; //how many workers in cinemas can one secret police officer (SPO) oversee
 	
-	NEWSPAPER_STRENGTH = 0.005; //increase in loyalty (or culture) every time a citizen reads a newspaper (at 100% effectiveness, 100% of newspaper's content and 100% average loyalty of editors) (set to 0.0 or less to disable the feature)
-	SHOW_STRENGTH = 0.01; //loyalty change if a citizen is watching a show at a cinema (set to 0.0 or less to disable the feature)
+	NEWSPAPER_STRENGTH = 0.008; //increase in loyalty (or culture) every time a citizen reads a newspaper (at 100% effectiveness, 100% of newspaper's content and 100% average loyalty of editors) (set to 0.0 or less to disable the feature)
+	SHOW_STRENGTH = 0.015; //loyalty change if a citizen is watching a show at a cinema (set to 0.0 or less to disable the feature)
 	SCHOOL_STRENGTH = 0.001; //additional loyalty change if a child is at school (set to 0.0 or less to disable the feature)
 	UNIVERSITY_STRENGTH = 0.001; //additional loyalty change if a student is at university (set to 0.0 or less to disable the feature)
 	ORPHANAGE_STRENGTH = 0.001; //additional loyalty change if a child is at orphanage (set to 0.0 or less to disable the feature)
@@ -39,7 +39,7 @@ defineFunction(InitSettings, void)
 	LOYALTY_MAX_ORPHANAGE = 0.5; //no additional positive drift above this level
 	LOYALTY_MAX_PRISON = 0.5; //no additional positive drift above this level
 	
-	DISABLE_OBJECTIVES = 0; //disables objectives visualising the number of current and required editors and secret police agents
+	DISABLE_OBJECTIVES = 1; //disables objectives visualising the number of current and required editors and secret police agents
 	
 	returnVoid();
 }
