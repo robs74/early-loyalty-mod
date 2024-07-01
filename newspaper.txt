@@ -40,12 +40,16 @@ defineVariable(int, window_id);
 defineVariable(int, window_exists);
 defineVariable(Window, window);
 defineVariable(int, clicked_object_id);
-defineArray(char[200], text);
+defineArray(char[300], text);
 defineVariable(char, NEWLINE);
 defineVariable(float, newspaper_efficiency_perc);
 defineVariable(float, censorship_efficiency_perc);
 defineVariable(int, editors_required);
 defineVariable(int, spo_required);
+
+defineVariable(GameSetting, game);
+defineVariable(float, time_factor);
+defineVariable(int, readers);
 
 defineFunction(UpdateState, void)
 {
@@ -59,6 +63,7 @@ defineFunction(UpdateState, void)
 	active_tv = 0;
 	for (i=0, i<n, i=i+1)
 	{
+		Building_IsOldTownActive(i, is_active);
 		building.GetDataByIndex(i);
 		if(building.nType ? BUILDINGTYPE_BROADCAST & building.nSubType ? BUILDINGSUBTYPE_RADIO & building.nWorkersNum > 0 & building.fPercFinished > 0.9999)
 		{
@@ -82,7 +87,7 @@ defineFunction(UpdateState, void)
 				spo_total_loyalty = spo_total_loyalty + worker.fStatusSoviet;
 			}
 		}
-		if(building.nType ? BUILDINGTYPE_LIVING & building.fPercFinished > 0.9999)
+		if(building.nType ? BUILDINGTYPE_LIVING & building.fPercFinished > 0.9999 & is_active * is_active ? 1)
 		{
 			population = population + building.nWorkersNum;
 		}
@@ -163,6 +168,14 @@ defineFunction(CalculateEfficiency, void)
 						strcat(text, newspaper_efficiency_perc);
 						strcat(text, NEWLINE); 
 						
+						strcat(text, "People currently reading our newspaper: ");
+						strcat(text, readers);
+						strcat(text, NEWLINE); 
+												
+						strcat(text, "Number of people reachable by the newspaper: ");
+						strcat(text, population);
+						strcat(text, NEWLINE); 
+						
 						strcat(text, "Secret police officers: ");
 						strcat(text, spo);
 						strcat(text, NEWLINE);
@@ -175,7 +188,7 @@ defineFunction(CalculateEfficiency, void)
 						strcat(text, censorship_efficiency);
 						strcat(text, "%");
 						
-						Scenario_WindowWithImageLeft("Press and shows", text, "newspaper_icon.png", 2);
+						Scenario_WindowWithImageLeft("Press and shows", text, "newspaper_icon.png", 3);
 					}
 				}
 			}
@@ -199,7 +212,11 @@ defineFunction(CalculateEfficiency, void)
 defineFunction(ReadNewspaper, void, int:id)
 {
 	worker.GetDataByIndex(id);
- 	can_read = worker.bIsHome + worker.fEducation - 1.0;
+	can_read = 1.0;
+	if(game.EducationLevel ? 0)
+	{
+		can_read = worker.fEducation - 1.0;
+	}
 	individual_effectiveness = 1.0;
 	if(worker.fStatusElectronic > 2.0 & active_tv ? 1)
 	{
@@ -209,22 +226,23 @@ defineFunction(ReadNewspaper, void, int:id)
 	{
 		individual_effectiveness = 0.5;
 	}
-	if(can_read > 0)
+	if(can_read > 0.0 & worker.bIsHome ? 1)
 	{
+		readers = readers + 1;
 		if(worker.fStatusSoviet < LOYALTY_MAX_NEWSPAPER)
 		{
 			//increase loyalty
-			Person_SetStatus(id, 3, Clamp(worker.fStatusSoviet + newspaper_efficiency * editors_avg_loyalty * individual_effectiveness * LOYALTY_FACTOR / 24.0, 0.0, LOYALTY_MAX_NEWSPAPER)); //24 - approximate number of ticks per day
+			Person_SetStatus(id, 3, Clamp(worker.fStatusSoviet + newspaper_efficiency * editors_avg_loyalty * individual_effectiveness * LOYALTY_FACTOR * time_factor / 24.0, 0.0, LOYALTY_MAX_NEWSPAPER)); //24 - approximate number of ticks per day
 		}
 		if(culture > 0.0 & worker.fStatusCulture < LOYALTY_MAX_NEWSPAPER + culture)
 		{
 			//increase culture, the more the more efficient is your newspaper
-			Person_SetStatus(id, 5, Clamp(worker.fStatusCulture + newspaper_efficiency * individual_effectiveness * culture / 120.0, 0.0, LOYALTY_MAX_NEWSPAPER + culture)); //24 * 5 - scaling factor
+			Person_SetStatus(id, 5, Clamp(worker.fStatusCulture + newspaper_efficiency * individual_effectiveness * culture * time_factor / 120.0, 0.0, LOYALTY_MAX_NEWSPAPER + culture)); //24 * 5 - scaling factor
 		}
 		elseif(culture < 0.0)
 		{
 			//decrease culture, the more the less efficient is your newspaper
-			Person_SetStatus(id, 5, Clamp(worker.fStatusCulture + negative_newspaper_efficiency * individual_effectiveness * culture / 30.0, 0.0, 1.0));
+			Person_SetStatus(id, 5, Clamp(worker.fStatusCulture + negative_newspaper_efficiency * individual_effectiveness * culture * time_factor / 30.0, 0.0, 1.0));
 		}
 	}
 	returnVoid();
@@ -287,7 +305,7 @@ defineFunction(main, void)
 	SPO_EFFICIENCY = MaxFloat(SPO_EFFICIENCY, 1.0);
 	LOYALTY_MAX_NEWSPAPER = Clamp(LOYALTY_MAX_NEWSPAPER, 0.0, 1.0);
 	LOYALTY_MAX_SHOW = Clamp(LOYALTY_MAX_SHOW, 0.0, 1.0);
-	LOYALTY_MAX_SCHOOL = Clamp(LOYALTY_MAX_NEWSPAPER, 0.0, 1.0);
+	LOYALTY_MAX_SCHOOL = Clamp(LOYALTY_MAX_SCHOOL, 0.0, 1.0);
 	LOYALTY_MAX_UNIVERSITY = Clamp(LOYALTY_MAX_SHOW, 0.0, 1.0);
 	LOYALTY_MAX_ORPHANAGE = Clamp(LOYALTY_MAX_NEWSPAPER, 0.0, 1.0);
 	LOYALTY_MAX_PRISON = Clamp(LOYALTY_MAX_SHOW, 0.0, 1.0);
@@ -297,12 +315,15 @@ defineFunction(main, void)
 	Script_GetGameTime(game_time_prev);
 	while(1 ? 1)
 	{
+		game.GetCurrentGameSettigns();
 		Script_GetGameTime(game_time);
 		if(game_time > game_time_prev + 2.0)
 		{
 			Script_EnterCriticalSection();
+			time_factor = (game_time - game_time_prev) / 2.5;
 			UpdateState();
 			CalculateEfficiency();
+			readers = 0;
 			for (i=0, i<n, i=i+1)
 			{
 				building.GetDataByIndex(i);
