@@ -131,7 +131,7 @@ defineFunction(CalculateEfficiency, void)
 		censorship_efficiency_perc = 100.0;
 		if(cinemas_workers > 0)
 		{
-			censorship_efficiency_perc = MinFloat(editors * EDITOR_EFFICIENCY / population * 100.0, 100.0);
+			censorship_efficiency_perc = MinFloat(spo * SPO_EFFICIENCY / cinemas_workers * 100.0, 100.0);
 			censorship_efficiency = MinFloat(spo * SPO_EFFICIENCY / cinemas_workers, 1.0);
 		}
 	}
@@ -164,8 +164,9 @@ defineFunction(CalculateEfficiency, void)
 						strcat(text, editors_required);
 						strcat(text, NEWLINE); 
 						
-						strcat(text, "Newspaper efficiency (percent): ");
+						strcat(text, "Newspaper efficiency: ");
 						strcat(text, newspaper_efficiency_perc);
+						strcat(text, "%");
 						strcat(text, NEWLINE); 
 						
 						strcat(text, "People currently reading our newspaper: ");
@@ -184,8 +185,8 @@ defineFunction(CalculateEfficiency, void)
 						strcat(text, spo_required);
 						strcat(text, NEWLINE);
 						
-						strcat(text, "Censorship efficiency (percent): ");
-						strcat(text, censorship_efficiency);
+						strcat(text, "Censorship efficiency: ");
+						strcat(text, censorship_efficiency_perc);
 						strcat(text, "%");
 						
 						Scenario_WindowWithImageLeft("Press and shows", text, "newspaper_icon.png", 3);
