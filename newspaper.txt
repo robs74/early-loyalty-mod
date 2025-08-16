@@ -139,21 +139,28 @@ defineFunction(CalculateEfficiency, void)
 	if(window_id ? -1)
 	{
 		clicked_object_id = -1;
+		Objective_Remove("press");
+		Objective_Remove("press_readers");
+		Objective_Remove("spo");
 	}
 	else()
 	{
 		window.GetDataByIndex(window_id);
 		if (window.nValidRead)
 		{
-			if (window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING & !(clicked_object_id ? window.nRefObjectIndex))
+			if (!(clicked_object_id ? window.nRefObjectIndex))
 			{
 				clicked_object_id = window.nRefObjectIndex;
+				Objective_Remove("press");
+				Objective_Remove("press_readers");
+				Objective_Remove("spo");
 				if(window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING)
 				{
 					building.GetDataByIndex(clicked_object_id);
 					Scenario_WindowExists(window_exists);
-					if(building.nType ? BUILDINGTYPE_SECRET_POLICE & building.nVehiclesWorkingNum < 1 & building.fPercFinished > 0.9999 & !window_exists)
+					if(building.nType ? BUILDINGTYPE_SECRET_POLICE & building.fPercFinished > 0.9999 & !window_exists)
 					{
+						/*
 						strcpy(text, "");
 						
 						strcat(text, "Newspaper editors: ");
@@ -190,6 +197,23 @@ defineFunction(CalculateEfficiency, void)
 						strcat(text, "%");
 						
 						Scenario_WindowWithImageLeft("Press and shows", text, "newspaper_icon.png", 3);
+						*/
+						
+						Objectives_CreateNewString("press", "Newspaper editors and efficiency");
+						Objective_AddRequirement("press", editors_required * 1.0, "newspaper_icon.png");
+						Objective_UpdateRequirement("press", 0, editors * 1.0);
+						Objective_AddRequirement("press", 0.0, "percent_icon.png");
+						Objective_UpdateRequirement("press", 1, newspaper_efficiency_perc * 1.0);
+						
+						Objectives_CreateNewString("press_readers", "People currently reading our newspaper");
+						Objective_AddRequirement("press_readers", population * 1.0, "newspaper_icon.png");
+						Objective_UpdateRequirement("press_readers", 0, readers * 1.0);
+						
+						Objectives_CreateNewString("spo", "Secret police officers and censorship efficiency");
+						Objective_AddRequirement("spo", spo_required * 1.0, "newspaper_icon.png");
+						Objective_UpdateRequirement("spo", 0, spo * 1.0);
+						Objective_AddRequirement("spo", 0.0, "percent_icon.png");
+						Objective_UpdateRequirement("spo", 1, censorship_efficiency_perc * 1.0);
 					}
 				}
 			}
